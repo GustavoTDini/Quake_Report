@@ -15,6 +15,7 @@
  */
 package com.example.android.quakereport;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -22,56 +23,80 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import java.sql.Date;
 import java.util.ArrayList;
+import java.util.List;
+
+import static com.example.android.quakereport.QueryUtils.fetchEarthquakeData;
 
 public class EarthquakeActivity extends AppCompatActivity {
 
-    public static final String LOG_TAG = EarthquakeActivity.class.getName();
+    /** URL to query the USGS dataset for earthquakes information */
+    private static final String USGS_REQUEST_URL =
+            "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
+
+    /** Adapter da lista de earthquakes */
+    private EarthquakeArrayAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
 
-        // Create a fake list of earthquake locations.
-        final ArrayList<Earthquake> earthquakes = QueryUtils.extractEarthquakes();
-
         // Find a reference to the {@link ListView} in the layout
-        ListView earthquakeListView = (ListView) findViewById(R.id.list);
+        ListView earthquakeListView = findViewById(R.id.list);
 
         // Create a new {@link ArrayAdapter} of earthquakes
-        EarthquakeArrayAdapter quakeAdapter = new EarthquakeArrayAdapter(
-                this, earthquakes);
+        mAdapter = new EarthquakeArrayAdapter(this, new ArrayList <Earthquake>());
 
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
-        earthquakeListView.setAdapter(quakeAdapter);
+        earthquakeListView.setAdapter(mAdapter);
+
+        EarthquakeASyncTask task = new EarthquakeASyncTask();
+
+        task.execute( USGS_REQUEST_URL );
 
         earthquakeListView.setOnItemClickListener( new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView <?> parent, View view, int position, long id) {
-                Earthquake thisQuake = earthquakes.get( position );
+                Earthquake thisQuake = mAdapter.getItem( position );
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(thisQuake.getURL()));
                 startActivity(browserIntent);
             }
         } );
     }
 
-
-    protected class EarthquakeASyncTask extends AsyncTask<String, Void, ArrayList<Earthquake>>{
+    @SuppressLint("StaticFieldLeak")
+    protected class EarthquakeASyncTask extends AsyncTask<String, Void, List<Earthquake>>{
 
         @Override
-        protected ArrayList <Earthquake> doInBackground(String... strings) {
-            return null;
+        protected List<Earthquake> doInBackground(String... urls) {
+            // Não realiza a requisição se não há URLs, ou a primeira URL é nula.
+            if (urls.length < 1 || urls[0] == null) {
+                return null;
+            }
+
+            return fetchEarthquakeData(urls[0]);
         }
-
+        /**
+         * Este método roda na thread main UI após o trabalho em segundo plano estiver
+         * completo. Este método recebe como entrada, o valor de retorno do método doInBackground().
+         * Primeiro limpamos o adapter, para se livrar dos dados do earthquake de uma anterior
+         * busca ao USGS. Então atualizamos o adapter com a nova lista de earthquakes,
+         * que irá chamar a ListView para re-popular seus itens de lista.
+         */
         @Override
-        protected void onPostExecute(ArrayList <Earthquake> earthquakes) {
-            super.onPostExecute( earthquakes );
+        protected void onPostExecute(List<Earthquake> data) {
+            // Limpa o adapter de dados anteriores de earthquake
+            mAdapter.clear();
+
+            // Se há uma lista válida de {@link Earthquake}s, adiciona-os ao data set do adapter.
+            // Isto irá chamar a ListView para ser atualizada.
+            if (data != null && !data.isEmpty()) {
+                mAdapter.addAll(data);
+            }
         }
     }
 }

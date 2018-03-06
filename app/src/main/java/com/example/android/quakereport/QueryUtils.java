@@ -16,19 +16,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Helper methods related to requesting and receiving earthquake data from USGS.
  */
-public final class QueryUtils {
-
+final class QueryUtils {
 
     /** Tag for the log messages */
-    public static final String LOG_TAG = EarthquakeActivity.class.getSimpleName();
-
-    /** URL to query the USGS dataset for earthquakes information */
-    private static final String USGS_REQUEST_URL =
-            "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
+    private static final String LOG_TAG = EarthquakeActivity.class.getSimpleName();
 
     /**
      * Create a private constructor because no one should ever create a {@link QueryUtils} object.
@@ -41,8 +37,8 @@ public final class QueryUtils {
     /**
      * Returns new URL object from the given string URL.
      */
-    private URL createUrl(String stringUrl) {
-        URL url = null;
+    private static URL createUrl(String stringUrl) {
+        URL url;
         try {
             url = new URL(stringUrl);
         } catch (MalformedURLException exception) {
@@ -55,7 +51,7 @@ public final class QueryUtils {
     /**
      * Make an HTTP request to the given URL and return a String as the response.
      */
-    private String makeHttpRequest(URL url) throws IOException {
+    private static String makeHttpRequest(URL url) throws IOException {
         String jsonResponse = "";
 
         if (url == null){
@@ -96,7 +92,7 @@ public final class QueryUtils {
      * Convert the {@link InputStream} into a String which contains the
      * whole JSON response from the server.
      */
-    private String readFromStream(InputStream inputStream) throws IOException {
+    private static String readFromStream(InputStream inputStream) throws IOException {
         StringBuilder output = new StringBuilder();
         if (inputStream != null) {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
@@ -115,24 +111,24 @@ public final class QueryUtils {
      * Return a list of {@link Earthquake} objects that has been built up from
      * parsing a JSON response.
      */
-    public ArrayList<Earthquake> extractEarthquakes() throws IOException {
+    private static List<Earthquake> extractFeatureFromJson(String earthquakeJson) {
 
-        URL url = createUrl(  USGS_REQUEST_URL);
-
-        String JsonStringResponse = makeHttpRequest( url );
+        if (TextUtils.isEmpty(earthquakeJson)){
+            return null;
+        }
 
         // Create an empty ArrayList that we can start adding earthquakes to
-        ArrayList<Earthquake> earthquakes = new ArrayList<>();
+        List<Earthquake> earthquakes = new ArrayList<>();
 
         // Try to parse the SAMPLE_JSON_RESPONSE. If there's a problem with the way the JSON
         // is formatted, a JSONException exception object will be thrown.
         // Catch the exception so the app doesn't crash, and print the error message to the logs.
         try {
 
-            JSONObject root = new JSONObject(JsonStringResponse);
+            JSONObject root = new JSONObject(earthquakeJson);
 
             JSONArray quakeFeaturesArray = root.getJSONArray("features");
-            
+
             for (int i = 0; i < quakeFeaturesArray.length(); i ++){
 
                 JSONObject thisQuakeFeatures = quakeFeaturesArray.getJSONObject(i);
@@ -146,11 +142,6 @@ public final class QueryUtils {
                 earthquakes.add( new Earthquake( mag, place, time , url));
             }
 
-
-
-            // TODO: Parse the response given by the SAMPLE_JSON_RESPONSE string and
-            // build up a list of Earthquake objects with the corresponding data.
-
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
             // catch the exception here, so the app doesn't crash. Print a log message
@@ -160,6 +151,20 @@ public final class QueryUtils {
 
         // Return the list of earthquakes
         return earthquakes;
+    }
+
+    static List<Earthquake> fetchEarthquakeData(String requestURL){
+
+        URL urlRequest = createUrl(  requestURL);
+
+        String jsonResponse = null;
+        try {
+            jsonResponse = makeHttpRequest(urlRequest);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Problem making the HTTP request.", e);
+        }
+
+        return extractFeatureFromJson( jsonResponse );
     }
 
 }
