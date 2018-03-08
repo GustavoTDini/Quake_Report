@@ -164,6 +164,8 @@ final class QueryUtils {
             Log.e(LOG_TAG, "Problem making the HTTP request.", e);
         }
 
+        Log.i( "JSon", "fetchEarthquakeData: "  + extractFeatureFromJson( jsonResponse ));
+
         return extractFeatureFromJson( jsonResponse );
     }
 
