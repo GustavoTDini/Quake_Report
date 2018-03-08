@@ -22,9 +22,11 @@ import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Loader;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,9 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
     /** Adapter da lista de earthquakes */
     private EarthquakeArrayAdapter mAdapter;
 
+    /** TextView que é mostrada quando a lista é vazia */
+    private TextView mEmptyStateTextView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +65,9 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
         earthquakeListView.setAdapter(mAdapter);
+
+        mEmptyStateTextView = (TextView) findViewById(R.id.no_quake_text);
+        earthquakeListView.setEmptyView(mEmptyStateTextView);
 
         // Obtém uma referência ao LoaderManager, a fim de interagir com loaders.
         LoaderManager loaderManager = getLoaderManager();
@@ -86,6 +94,9 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
 
     @Override
     public void onLoadFinished(Loader<List<Earthquake>> loader, List<Earthquake> earthquakes) {
+        // Seta o texto de estado vazio para mostrar "Nenhum terremoto encontrado."
+        mEmptyStateTextView.setText(R.string.no_earthquakes);
+
         // Limpa o adapter de dados de earthquake anteriores
         mAdapter.clear();
 
@@ -102,37 +113,4 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
         mAdapter.clear();
     }
 
-//    @SuppressLint("StaticFieldLeak")
-//    protected class EarthquakeASyncTask extends AsyncTask<String, Void, List<Earthquake>>{
-//
-//        @Override
-//        protected List<Earthquake> doInBackground(String... urls) {
-//
-//            // Não realiza a requisição se não há URLs, ou a primeira URL é nula.
-//            if (urls.length < 1 || urls[0] == null) {
-//                return null;
-//            }
-//
-//            Log.i( "URL", "doInBackground: "  + urls[0]);
-//            return fetchEarthquakeData(urls[0]);
-//        }
-//        /**
-//         * Este método roda na thread main UI após o trabalho em segundo plano estiver
-//         * completo. Este método recebe como entrada, o valor de retorno do método doInBackground().
-//         * Primeiro limpamos o adapter, para se livrar dos dados do earthquake de uma anterior
-//         * busca ao USGS. Então atualizamos o adapter com a nova lista de earthquakes,
-//         * que irá chamar a ListView para re-popular seus itens de lista.
-//         */
-//        @Override
-//        protected void onPostExecute(List<Earthquake> data) {
-//            // Limpa o adapter de dados anteriores de earthquake
-//            mAdapter.clear();
-//
-//            // Se há uma lista válida de {@link Earthquake}s, adiciona-os ao data set do adapter.
-//            // Isto irá chamar a ListView para ser atualizada.
-//            if (data != null && !data.isEmpty()) {
-//                mAdapter.addAll(data);
-//            }
-//        }
-//    }
 }
