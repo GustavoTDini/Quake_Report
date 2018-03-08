@@ -22,10 +22,10 @@ import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Loader;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -51,6 +51,9 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
     /** TextView que é mostrada quando a lista é vazia */
     private TextView mEmptyStateTextView;
 
+    /** ProgressBar que é mostrada enquanto conecção é realizada*/
+    private ProgressBar mLoadingBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +64,8 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
 
         // Create a new {@link ArrayAdapter} of earthquakes
         mAdapter = new EarthquakeArrayAdapter(this, new ArrayList <Earthquake>());
+
+        mLoadingBar = findViewById( R.id.loading_spinner );
 
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
@@ -99,6 +104,8 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
 
         // Limpa o adapter de dados de earthquake anteriores
         mAdapter.clear();
+
+        mLoadingBar.setVisibility( View.GONE );
 
         // Se há uma lista válida de {@link Earthquake}s, então os adiciona ao data set do adapter.
         // Isto ativará a atualização da ListView.
