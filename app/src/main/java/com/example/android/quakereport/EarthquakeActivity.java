@@ -15,7 +15,10 @@
  */
 package com.example.android.quakereport;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -67,20 +70,31 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderCallb
 
         mLoadingBar = findViewById( R.id.loading_spinner );
 
+        mEmptyStateTextView = (TextView) findViewById(R.id.no_quake_text);
+
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
         earthquakeListView.setAdapter(mAdapter);
 
-        mEmptyStateTextView = (TextView) findViewById(R.id.no_quake_text);
-        earthquakeListView.setEmptyView(mEmptyStateTextView);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService( Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 
-        // Obtém uma referência ao LoaderManager, a fim de interagir com loaders.
-        LoaderManager loaderManager = getLoaderManager();
+        if (networkInfo != null && networkInfo.isConnected()){
 
-        // Inicializa o loader. Passa um ID constante int definido acima e passa nulo para
-        // o bundle. Passa esta activity para o parâmetro LoaderCallbacks (que é válido
-        // porque esta activity implementa a interface LoaderCallbacks).
-        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+            earthquakeListView.setEmptyView(mEmptyStateTextView);
+
+            // Obtém uma referência ao LoaderManager, a fim de interagir com loaders.
+            LoaderManager loaderManager = getLoaderManager();
+
+            // Inicializa o loader. Passa um ID constante int definido acima e passa nulo para
+            // o bundle. Passa esta activity para o parâmetro LoaderCallbacks (que é válido
+            // porque esta activity implementa a interface LoaderCallbacks).
+            loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+
+        } else {
+            mEmptyStateTextView.setText(R.string.no_internet_connection);
+            mLoadingBar.setVisibility( View.GONE );
+        }
 
         earthquakeListView.setOnItemClickListener( new AdapterView.OnItemClickListener() {
             @Override
