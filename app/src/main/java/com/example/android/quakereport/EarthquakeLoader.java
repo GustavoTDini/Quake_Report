@@ -12,9 +12,6 @@ import java.util.List;
 
 public class EarthquakeLoader extends AsyncTaskLoader<List<Earthquake>> {
 
-    /** Tag para mensagens de log */
-    private static final String LOG_TAG = EarthquakeLoader.class.getName();
-
     /** URL da busca */
     private String mUrl;
 
