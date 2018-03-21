@@ -28,6 +28,10 @@
     <string name="settings_min_magnitude_key" translatable="false">min_magnitude</string>
     <string name="settings_min_magnitude_default" translatable="false">0</string>
 
+    <string name="settings_list_size_label">Quantidade de Terremotos da Lista</string>
+    <string name="settings_list_size_key" translatable="false">list_size</string>
+    <string name="settings_list_size_default" translatable="false">10</string>
+
     <!-- Strings Para Preferência de Order-By [CHAR LIMIT=30] -->
     <string name="settings_order_by_label">Order By</string>
     <string name="settings_order_by_key" translatable="false">order_by</string>
